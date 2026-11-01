@@ -1,0 +1,133 @@
+{
+  "arc3": {
+    "theme": "ML research"
+  },
+  "automa_city": {
+    "theme": "Math education"
+  },
+  "bdh": {
+    "theme": "BDH / Sudoku",
+    "description": "Earlier BDH fork exploring Sudoku-Extreme; bdh-sudoku looks like its successor."
+  },
+  "bdh-sudoku": {
+    "theme": "BDH / Sudoku",
+    "description": "Solving Sudoku-Extreme with a Baby Dragon Hatchling core."
+  },
+  "binder": {
+    "theme": "Tools"
+  },
+  "continuous-thought-machines": {
+    "theme": "ML research",
+    "description": "Sakana AI's Continuous Thought Machine (upstream repo)."
+  },
+  "go-rrm": {
+    "theme": "Go AI",
+    "description": "Does latent compute learn to read? Recurrent reasoning models for 9x9 Go, tested on Igo Hatsuyoron 120."
+  },
+  "go-rrm-data": {
+    "theme": "Go AI"
+  },
+  "golibrarybenchmarks": {
+    "theme": "Go AI",
+    "description": "Speed benchmarks of Go environments: minigo, KataGo, pgx and GoJAX."
+  },
+  "gptt": {
+    "theme": "ML research",
+    "description": "Custom GPT training code, comparing against modded-nanogpt speedrun techniques."
+  },
+  "hetero_experiments": {
+    "theme": "ML research"
+  },
+  "k12_math_eval": {
+    "theme": "Math education",
+    "description": "Adaptive diagnostics, a K-12 skill map and a timed practice hub."
+  },
+  "KataGo": {
+    "theme": "Go AI",
+    "description": "KataGo Go engine (upstream repo)."
+  },
+  "language-learning": {
+    "theme": "Personal"
+  },
+  "life-tracker": {
+    "theme": "Personal",
+    "description": "Notes and plans across health, fitness, wealth, social and home."
+  },
+  "lut_mm": {
+    "theme": "ML research",
+    "description": "Fast ternary matrix multiplication, packing 5 trits per byte."
+  },
+  "maia3": {
+    "theme": "ML research",
+    "description": "Human-like chess engine using Maia-3 models (upstream repo)."
+  },
+  "ml-kata": {
+    "theme": "ML research",
+    "description": "Machine learning katas (jeffdshen's repo, with local edits)."
+  },
+  "modded-nanogpt": {
+    "theme": "ML research",
+    "description": "NanoGPT speedrun (upstream repo, with a local tommy branch)."
+  },
+  "music-learning": {
+    "theme": "Personal"
+  },
+  "nested_learning": {
+    "theme": "ML research",
+    "description": "Reproduction of Google's Nested Learning (HOPE) architecture (upstream repo, with local edits)."
+  },
+  "notion-organizer": {
+    "theme": "Personal",
+    "description": "Audit of the Notion workspace, August 2026."
+  },
+  "okc": {
+    "theme": "Inference",
+    "description": "Competition work on Muse kernels and SGLang serving on H200s.",
+    "next": "Kernel checks close Nov 4, 11:59 pm PT; serving opens Nov 5, noon PT (from ROADMAP.md)."
+  },
+  "predictions": {
+    "theme": "Tools",
+    "description": "Looks for inefficiencies in Kalshi prediction-market data."
+  },
+  "project-dashboard": {
+    "theme": "Tools",
+    "description": "This dashboard."
+  },
+  "rlhf-practice": {
+    "theme": "ML research",
+    "description": "GRPO policy-gradient practice: training a small Qwen model on arithmetic and maze tasks."
+  },
+  "rlvr-search": {
+    "theme": "ML research"
+  },
+  "running": {
+    "theme": "Personal"
+  },
+  "rwkv-replication": {
+    "theme": "ML research",
+    "description": "Replication of the RWKV architecture."
+  },
+  "sigmago": {
+    "theme": "Go AI"
+  },
+  "speedmath-js": {
+    "theme": "Math education",
+    "description": "Math game where understanding comes first, then fluency through speed challenges."
+  },
+  "theoretical_minimum": {
+    "theme": "Math education",
+    "description": "Adaptive tutor: concept lessons plus cornerstone drills."
+  },
+  "TorchCode": {
+    "theme": "ML research",
+    "description": "PyTorch coding practice judge for Jupyter (upstream repo, with local edits)."
+  },
+  "vgo": {
+    "theme": "Go AI",
+    "description": "AlphaZero-style self-play for Voronoi Go, a continuous-action game on the unit square."
+  },
+  "voronoi-go-rs": {
+    "theme": "Go AI",
+    "description": "Rust rules engine for Voronoi Go, with Python bindings (upstream repo)."
+  }
+}

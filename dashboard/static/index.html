@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --surface-2: #f0efec;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #6f6d68;
+  --line: #e1e0d9; --border: rgba(11,11,11,.10);
+  --accent: #2a78d6; --accent-ink: #1c5cab;
+  --heat-0: #eceae4; --heat-1: #b7d3f6; --heat-2: #6da7ec; --heat-3: #2a78d6; --heat-4: #104281;
+  --critical: #d03b3b; --critical-ink: #a82a2a; --serious: #ec835a; --serious-ink: #a8481f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #2c2c2a;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9b9a92;
+    --line: #2c2c2a; --border: rgba(255,255,255,.10);
+    --accent: #3987e5; --accent-ink: #86b6ef;
+    --heat-0: #2c2c2a; --heat-1: #184f95; --heat-2: #256abf; --heat-3: #3987e5; --heat-4: #9ec5f4;
+    --critical: #d03b3b; --critical-ink: #f08a8a; --serious: #ec835a; --serious-ink: #ec835a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 28px 24px 64px; }
+header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+#scanned { color: var(--muted); font-size: 13px; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 11px; cursor: pointer;
+}
+button:hover { background: var(--surface-2); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#rescan { margin-left: auto; }
+
+.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
+.tile {
+  text-align: left; padding: 13px 15px; border-radius: 10px; background: var(--surface);
+  display: block; width: 100%;
+}
+.tile.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tile.static { cursor: default; }
+.tile.static:hover { background: var(--surface); }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 28px; font-weight: 650; line-height: 1.25; letter-spacing: -.02em; }
+.tile .sub { color: var(--muted); font-size: 12.5px; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.filters input, .filters select {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px;
+}
+#search { flex: 1 1 220px; max-width: 320px; }
+#count { margin-left: auto; color: var(--muted); font-size: 13px; }
+
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-weight: 500; font-size: 12.5px; color: var(--muted);
+  padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+td { padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+tbody tr:first-child td { border-top: 0; }
+tr.row { cursor: pointer; }
+tr.row:hover td { background: var(--surface-2); }
+tr.row.open td { background: var(--surface-2); }
+.col-name { width: 44%; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.name {
+  all: unset; font-weight: 600; cursor: pointer; word-break: break-word;
+}
+.name:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tag {
+  font-size: 12px; color: var(--ink-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap;
+}
+tr.row:hover .tag, tr.row.open .tag { background: var(--surface); }
+.tag.link { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.tag.link:hover { text-decoration: underline; }
+.desc { color: var(--ink-2); margin-top: 1px; }
+.next { margin-top: 3px; color: var(--accent-ink); }
+.next::before { content: "→ "; }
+.touched { white-space: nowrap; }
+.via { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+.heat { display: inline-flex; gap: 2px; vertical-align: middle; }
+.heat i { width: 12px; height: 18px; border-radius: 2px; display: block; background: var(--heat-0); }
+.heat i.l1 { background: var(--heat-1); } .heat i.l2 { background: var(--heat-2); }
+.heat i.l3 { background: var(--heat-3); } .heat i.l4 { background: var(--heat-4); }
+.heat-none { color: var(--muted); font-size: 12.5px; }
+.legend { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; color: var(--muted); font-size: 12.5px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: block; }
+
+.risks { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.risk { white-space: nowrap; font-size: 13px; color: var(--serious-ink); }
+.risk.lost { color: var(--critical-ink); font-weight: 600; }
+.risk::before { content: "●"; font-size: 9px; margin-right: 4px; vertical-align: 1px; color: var(--serious); }
+.risk.lost::before { content: "▲"; color: var(--critical); }
+.safe { color: var(--muted); font-size: 13px; }
+
+tr.detail > td { padding: 16px 18px 20px; background: var(--surface); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+h3 { margin: 0 0 7px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.facts { margin: 0 0 16px; display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.files { margin: 0; padding: 0; list-style: none; max-height: 190px; overflow: auto; }
+.form label { display: block; margin-bottom: 9px; color: var(--ink-2); font-size: 13px; }
+.form input, .form select, .form textarea {
+  display: block; width: 100%; margin-top: 2px; padding: 5px 8px; font-size: 14px;
+  background: var(--page); border: 1px solid var(--border); border-radius: 6px;
+}
+.form textarea { min-height: 72px; resize: vertical; }
+.form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+#flash, .flash { color: var(--muted); font-size: 13px; }
+
+.empties { margin-top: 14px; color: var(--muted); font-size: 13px; }
+.notice { padding: 30px; text-align: center; color: var(--muted); }
+.error { color: var(--critical-ink); margin-bottom: 12px; }
+
+#tip {
+  position: fixed; z-index: 10; pointer-events: none; display: none;
+  background: var(--ink); color: var(--page); font-size: 12.5px;
+  padding: 3px 7px; border-radius: 5px; white-space: nowrap;
+}
+@media (max-width: 1000px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .col-activity { display: none; }
+}
+@media (max-width: 680px) {
+  main { padding: 18px 16px 48px; }
+  .col-size, .col-touched .via { display: none; }
+  .detail-grid { grid-template-columns: 1fr; }
+  th, td { padding: 8px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Projects</h1>
+    <span id="scanned"></span>
+    <button id="rescan">Rescan</button>
+  </header>
+  <div id="error" class="error" hidden></div>
+  <section class="tiles" id="tiles" aria-label="Summary"></section>
+  <section class="filters" aria-label="Filters">
+    <input id="search" type="search" placeholder="Search name, description, notes" aria-label="Search">
+    <select id="theme" aria-label="Theme"></select>
+    <select id="scope" aria-label="Ownership">
+      <option value="all">All projects</option>
+      <option value="own">Mine and forks</option>
+      <option value="clone">Upstream clones</option>
+    </select>
+    <select id="sort" aria-label="Sort">
+      <option value="touched">Recently touched</option>
+      <option value="stale">Longest idle</option>
+      <option value="risk">Most at risk</option>
+      <option value="size">Largest</option>
+      <option value="name">Name</option>
+    </select>
+    <span class="legend" id="legend"></span>
+    <span id="count"></span>
+  </section>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="col-name">Project</th>
+        <th class="col-touched">Last touched</th>
+        <th class="col-activity" id="activity-head">Your commits</th>
+        <th>Only on this machine</th>
+        <th class="col-size num">Size</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="empties" id="empties"></div>
+</main>
+<div id="tip" role="status"></div>
+<datalist id="themes"></datalist>
+
+<script>
+"use strict";
+const STATUSES = ["", "Active", "Paused", "Blocked", "Finished", "Abandoned", "Reference"];
+const OWNERSHIP = { local: "local only", fork: "fork", clone: "upstream clone" };
+const STAGE_LABEL = { active: "Active", cooling: "Cooling", dormant: "Dormant", cold: "Cold" };
+const HEAT_BINS = [[1, 4], [5, 19], [20, 59], [60, Infinity]];
+const MONTH = new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" });
+
+const $ = id => document.getElementById(id);
+const state = { scan: null, notes: {}, dashboards: {}, view: "all", open: null, scanning: false };
+
+/* Everything from disk goes through textContent, never innerHTML. */
+function el(tag, props = {}, ...kids) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (key === "class") node.className = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else if (key in node && key !== "list") node[key] = value; /* input.list is read-only */
+    else node.setAttribute(key, value);
+  }
+  node.append(...kids.filter(k => k !== null && k !== undefined));
+  return node;
+}
+
+function bytes(n) {
+  if (n == null) return "–";
+  if (n < 1e6) return "<1 MB";
+  if (n < 1e9) return `${Math.round(n / 1e6)} MB`;
+  return n < 100e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.round(n / 1e9)} GB`;
+}
+
+function idle(days) {
+  if (days == null) return "–";
+  if (days === 0) return "today";
+  if (days < 60) return `${days}d ago`;
+  if (days < 365) return `${Math.round(days / 30.4)} mo ago`;
+  return `${(days / 365).toFixed(1)} yr ago`;
+}
+
+const date = ts => ts ? new Date(ts * 1000).toLocaleDateString(undefined, { dateStyle: "medium" }) : "–";
+const monthName = key => { const [y, m] = key.split("-"); return MONTH.format(new Date(+y, +m - 1)); };
+const note = p => state.notes[p.name] || {};
+const describe = p => note(p).description || p.description || "";
+const hasLost = p => p.risks.some(r => r.lost);
+const unsynced = p => p.risks.some(r => !r.lost) && p.ownership !== "clone";
+const quiet = p => p.stage === "dormant" || p.stage === "cold";
+
+function riskScore(p) {
+  return (hasLost(p) ? 1e6 : 0) + p.unpushed + p.modified + p.untracked + p.worktree_dirty;
+}
+
+const live = () => state.scan.projects.filter(p => !p.empty);
+
+function renderTiles() {
+  const projects = live();
+  const count = fn => projects.filter(fn).length;
+  const total = projects.reduce((s, p) => s + (p.size || 0), 0);
+  const rebuildable = projects.reduce((s, p) => s + (p.rebuildable || 0), 0);
+  const unpushed = projects.filter(p => p.remote && p.ownership !== "clone").reduce((s, p) => s + p.unpushed, 0);
+  const tiles = [
+    { view: "active", label: "Active", value: count(p => p.stage === "active"), sub: "touched in the last 30 days" },
+    { view: "quiet", label: "Gone quiet", value: count(quiet), sub: "idle for 3 months or more" },
+    { view: "lost", label: "No backup at all", value: count(hasLost), sub: "only copy is on this disk" },
+    { view: "unsynced", label: "Backed up, but behind", value: count(p => unsynced(p) && !hasLost(p)), sub: `${unpushed.toLocaleString()} commits waiting to push` },
+    { label: "Disk, before compression", value: bytes(total), sub: `about ${bytes(rebuildable)} is rebuildable` },
+  ];
+  $("tiles").replaceChildren(...tiles.map(t => el("button", {
+    class: `tile${t.view ? "" : " static"}${state.view === t.view ? " on" : ""}`,
+    disabled: !t.view,
+    "aria-pressed": String(state.view === t.view),
+    onclick: () => { state.view = state.view === t.view ? "all" : t.view; renderTiles(); renderRows(); },
+  }, el("div", { class: "label", textContent: t.label }),
+     el("div", { class: "value", textContent: t.value }),
+     el("div", { class: "sub", textContent: t.sub }))));
+}
+
+function matches(p) {
+  const views = { all: () => true, active: p => p.stage === "active", quiet, lost: hasLost, unsynced: p => unsynced(p) && !hasLost(p) };
+  if (!views[state.view](p)) return false;
+  const scope = $("scope").value;
+  if (scope === "own" && p.ownership === "clone") return false;
+  if (scope === "clone" && p.ownership !== "clone") return false;
+  const theme = $("theme").value;
+  if (theme && note(p).theme !== theme) return false;
+  const query = $("search").value.trim().toLowerCase();
+  if (!query) return true;
+  const n = note(p);
+  return [p.name, describe(p), n.next, n.note, n.theme, p.stack].join(" ").toLowerCase().includes(query);
+}
+
+const sorters = {
+  touched: (a, b) => (b.last_touched || 0) - (a.last_touched || 0),
+  stale: (a, b) => (a.last_touched || 0) - (b.last_touched || 0),
+  risk: (a, b) => riskScore(b) - riskScore(a),
+  size: (a, b) => (b.size || 0) - (a.size || 0),
+  name: (a, b) => a.name.localeCompare(b.name),
+};
+
+function heatCell(count, key) {
+  const level = HEAT_BINS.findIndex(([lo, hi]) => count >= lo && count <= hi) + 1;
+  const label = `${monthName(key)}: ${count} commit${count === 1 ? "" : "s"}`;
+  return el("i", { class: level ? `l${level}` : "", "data-tip": label });
+}
+
+function activity(p) {
+  if (!p.in_git) return el("span", { class: "heat-none", textContent: "not in git" });
+  if (!p.total_commits) return el("span", { class: "heat-none", textContent: "no commits yet" });
+  if (!p.my_commits) return el("span", { class: "heat-none", textContent: "no commits of yours" });
+  const inRange = state.scan.months.some(m => p.months[m]);
+  if (!inRange) return el("span", { class: "heat-none", textContent: "none in 12 months" });
+  return el("span", { class: "heat", role: "img", "aria-label": `Commits per month for ${p.name}` },
+    ...state.scan.months.map(m => heatCell(p.months[m] || 0, m)));
+}
+
+function risks(p) {
+  if (!p.risks.length) return el("span", { class: "safe", textContent: "Nothing" });
+  return el("div", { class: "risks" }, ...p.risks.map(r =>
+    el("span", { class: `risk${r.lost ? " lost" : ""}`, textContent: r.label })));
+}
+
+function row(p) {
+  const n = note(p);
+  const open = state.open === p.name;
+  const toggle = () => { state.open = open ? null : p.name; renderRows(); };
+  const desc = describe(p);
+  return el("tr", { class: `row${open ? " open" : ""}`, onclick: toggle },
+    el("td", {},
+      el("div", {},
+        el("button", { class: "name", textContent: p.name, "aria-expanded": String(open),
+          onclick: e => { e.stopPropagation(); toggle(); } }),
+        state.dashboards[p.name] ? el("a", { class: "tag link", href: state.dashboards[p.name],
+          textContent: "Dashboard", onclick: e => e.stopPropagation() }) : null,
+        OWNERSHIP[p.ownership] ? el("span", { class: "tag", textContent: OWNERSHIP[p.ownership] }) : null,
+        n.status ? el("span", { class: "tag", textContent: n.status }) : null),
+      desc ? el("div", { class: "desc", textContent: desc }) : null,
+      n.next ? el("div", { class: "next", textContent: n.next }) : null),
+    el("td", { class: "col-touched" },
+      el("div", { class: "touched", textContent: idle(p.days_idle) }),
+      el("div", { class: "via", textContent: `${STAGE_LABEL[p.stage]} · ${p.last_touched_via || "–"}` })),
+    el("td", { class: "col-activity" }, activity(p)),
+    el("td", {}, risks(p)),
+    el("td", { class: "col-size num", textContent: bytes(p.size) }));
+}
+
+function facts(pairs) {
+  const dl = el("dl", { class: "facts" });
+  for (const [key, value] of pairs) {
+    if (value === null || value === undefined || value === "") continue;
+    dl.append(el("dt", { textContent: key }), el("dd", {}, value));
+  }
+  return dl;
+}
+
+function saveField(p, flash) {
+  return async event => {
+    const { name, value } = event.target;
+    if ((note(p)[name] || "") === value.trim()) return;
+    flash.textContent = "Saving…";
+    try {
+      const res = await post("/api/note", { name: p.name, fields: { [name]: value } });
+      state.notes[p.name] = res.note;
+      flash.textContent = "Saved";
+      syncThemes();
+    } catch (e) {
+      flash.textContent = `Not saved: ${e.message}`;
+    }
+  };
+}
+
+function field(p, flash, label, name, control) {
+  const n = note(p);
+  control.name = name;
+  control.value = n[name] || "";
+  control.addEventListener("change", saveField(p, flash));
+  return el("label", {}, label, control);
+}
+
+function detail(p) {
+  const flash = el("span", { class: "flash" });
+  const branchInfo = p.in_git
+    ? `${p.branch || "detached"}${p.branches > 1 ? ` (${p.branches} branches)` : ""}${p.worktrees ? `, ${p.worktrees} worktree${p.worktrees > 1 ? "s" : ""}` : ""}`
+    : null;
+  const lastCommit = p.last_commit_ts ? `${date(p.last_commit_ts)}: ${p.last_commit_subject}` : null;
+  const left = el("div", {},
+    el("h3", { textContent: "Where you left off" }),
+    facts([
+      ["Last commit", lastCommit],
+      ["Last file edit", p.file_path ? el("span", {}, `${date(p.file_ts)}: `, el("code", { textContent: p.file_path })) : null],
+      ["Claude sessions", p.claude_sessions ? `${p.claude_sessions}, last ${date(p.claude_ts)}` : null],
+      ["Pick up from", p.docs.length ? el("code", { textContent: p.docs.join("  ") }) : null],
+      ["Branch", branchInfo],
+      ["Remote", p.remote],
+      ["Stack", p.stack],
+    ]),
+    p.files.length ? el("h3", { textContent: `Uncommitted (${p.modified} changed, ${p.untracked} untracked)` }) : null,
+    p.files.length ? el("ul", { class: "files" }, ...p.files.map(f => el("li", {}, el("code", { textContent: f })))) : null,
+    p.worktree_dirty ? el("p", { textContent: `Plus ${p.worktree_dirty} uncommitted in worktrees.` }) : null,
+    el("h3", { textContent: "Disk", style: "margin-top:14px" }),
+    facts(p.largest.map(c => [bytes(c.size), el("code", { textContent: c.name })])));
+
+  const statusSelect = el("select", {}, ...STATUSES.map(s => el("option", { value: s, textContent: s || "Not set" })));
+  const right = el("div", { class: "form" },
+    el("h3", { textContent: "Your notes" }),
+    el("div", { class: "two" },
+      field(p, flash, "Status", "status", statusSelect),
+      field(p, flash, "Theme", "theme", el("input", { type: "text", list: "themes" }))),
+    field(p, flash, "Next step", "next", el("input", { type: "text" })),
+    field(p, flash, "Description", "description", el("input", { type: "text", placeholder: p.description || "" })),
+    field(p, flash, "Notes", "note", el("textarea", {})),
+    el("div", { class: "actions" },
+      el("button", { textContent: "Open in PyCharm", onclick: async () => {
+        try { await post("/api/open", { name: p.name }); flash.textContent = "Opening…"; }
+        catch (e) { flash.textContent = e.message; }
+      } }),
+      el("button", { textContent: "Copy Claude command", onclick: async () => {
+        await navigator.clipboard.writeText(`cd ${JSON.stringify(p.path)} && claude`);
+        flash.textContent = "Copied";
+      } }),
+      flash));
+  return el("tr", { class: "detail" }, el("td", { colSpan: 5 }, el("div", { class: "detail-grid" }, left, right)));
+}
+
+function renderRows() {
+  const shown = live().filter(matches).sort(sorters[$("sort").value]);
+  const rows = shown.flatMap(p => state.open === p.name ? [row(p), detail(p)] : [row(p)]);
+  if (!rows.length) rows.push(el("tr", {}, el("td", { colSpan: 5, class: "notice", textContent: "No projects match." })));
+  $("rows").replaceChildren(...rows);
+  $("count").textContent = `${shown.length} of ${live().length}`;
+  const empties = state.scan.projects.filter(p => p.empty).map(p => p.name);
+  $("empties").textContent = empties.length ? `Empty folders: ${empties.join(", ")}` : "";
+}
+
+function syncThemes() {
+  const themes = [...new Set(Object.values(state.notes).map(n => n.theme).filter(Boolean))].sort();
+  const select = $("theme");
+  const current = select.value;
+  select.replaceChildren(el("option", { value: "", textContent: "All themes" }),
+    ...themes.map(t => el("option", { value: t, textContent: t })));
+  select.value = themes.includes(current) ? current : "";
+  $("themes").replaceChildren(...themes.map(t => el("option", { value: t })));
+}
+
+function renderLegend() {
+  const months = state.scan.months;
+  $("activity-head").textContent = `Your commits, ${monthName(months[0])} to ${monthName(months[months.length - 1])}`;
+  $("legend").replaceChildren("Fewer ",
+    ...[1, 2, 3, 4].map(i => el("i", { style: `background:var(--heat-${i})`, "data-tip": `${HEAT_BINS[i - 1][0]}${HEAT_BINS[i - 1][1] === Infinity ? "+" : `–${HEAT_BINS[i - 1][1]}`} commits` })),
+    " More");
+}
+
+async function post(url, body) {
+  const res = await fetch(url, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function applyStatus(data) {
+  state.scanning = data.scanning;
+  $("rescan").disabled = data.scanning;
+  $("rescan").textContent = data.scanning ? "Scanning…" : "Rescan";
+  $("error").hidden = !data.error;
+  $("error").textContent = data.error || "";
+  if (state.scan) $("scanned").textContent = `Scanned ${new Date(state.scan.scanned_at * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
+}
+
+async function load() {
+  const data = await (await fetch("/api/data")).json();
+  const fresh = data.scan && data.scan.scanned_at !== state.scan?.scanned_at;
+  state.scan = data.scan;
+  state.dashboards = data.dashboards || {};
+  if (!Object.keys(state.notes).length) state.notes = data.annotations;
+  applyStatus(data);
+  /* Redrawing an open row would drop what's being typed into it. */
+  if (fresh) {
+    syncThemes(); renderLegend(); renderTiles();
+    if (!state.open) renderRows();
+  }
+  if (data.scanning) setTimeout(load, 700);
+}
+
+$("rescan").addEventListener("click", async () => { await post("/api/scan", {}); load(); });
+for (const id of ["search", "theme", "scope", "sort"]) {
+  $(id).addEventListener("input", () => { if (state.scan) renderRows(); });
+}
+const tip = $("tip");
+document.addEventListener("mouseover", e => {
+  const target = e.target.closest?.("[data-tip]");
+  if (!target) { tip.style.display = "none"; return; }
+  tip.textContent = target.dataset.tip;
+  tip.style.display = "block";
+  const box = target.getBoundingClientRect(), own = tip.getBoundingClientRect();
+  tip.style.left = `${Math.min(innerWidth - own.width - 8, Math.max(8, box.left + box.width / 2 - own.width / 2))}px`;
+  tip.style.top = `${box.top - own.height - 6}px`;
+});
+load().catch(e => { $("error").hidden = false; $("error").textContent = `Could not reach the server: ${e.message}`; });
+</script>
+</body>
+</html>

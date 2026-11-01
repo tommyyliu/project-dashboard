@@ -1,0 +1,13 @@
+{
+  "root": "~/PycharmProjects",
+  "dashboards": {
+    "vgo": "http://127.0.0.1:8766/"
+  },
+  "my_emails": [
+    "tommyyliu@gmail.com",
+    "tommy@findresonance.app"
+  ],
+  "my_github_owners": [
+    "tommyyliu"
+  ]
+}
