@@ -21,6 +21,9 @@ It needs only Python, with no packages to install. Tests: `uv run pytest`.
   anywhere else. An orange dot means a backup exists but is behind.
 - **Unpushed** compares against the last known state of the remote. The scan never
   fetches, so run `git fetch` in a repo if this looks wrong.
+- **Worktrees**: a folder that is a git worktree of another project here shows only
+  its own uncommitted files. Unpushed commits and stashes are shared, so the main
+  repo's row reports them.
 - **Disk** comes from `du`, which reports sizes before btrfs compression. `/home` uses
   zstd, so real use is lower and deleting data frees less than the number shown. Rebuildable means `.venv`, `target`, `node_modules` and
   `__pycache__`. uv hardlinks packages across projects, so deleting them all would

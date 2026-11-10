@@ -198,8 +198,19 @@ def scan_git(path: Path, cfg: Config, now: float) -> dict:
         if ts > last_ts:
             last_ts, last_subject = ts, parts[2]
 
+    # A linked worktree shares branches and stashes with its main repo. When that
+    # repo has its own row, it reports them, so they aren't counted twice.
+    worktree_of = None
+    if (path / ".git").is_file():
+        common = (git(path, "rev-parse", "--path-format=absolute", "--git-common-dir") or "").strip()
+        main = Path(common).parent if common else None
+        if main and main.parent == cfg.root and main != path:
+            worktree_of = main.name
+
     # --branches rather than --all: a stash is not an unpushed commit.
-    unpushed = int((git(path, "rev-list", "--count", "--branches", "--not", "--remotes") or "0").strip() or 0)
+    unpushed = 0 if worktree_of else int(
+        (git(path, "rev-list", "--count", "--branches", "--not", "--remotes") or "0").strip() or 0
+    )
     status = parse_status(git(path, "status", "--porcelain") or "")
 
     worktrees, worktree_dirty = 0, 0
@@ -210,6 +221,8 @@ def scan_git(path: Path, cfg: Config, now: float) -> dict:
         if tree == path or not tree.exists():
             continue
         worktrees += 1
+        if tree.parent == cfg.root:
+            continue  # it has its own row, which reports its changes
         worktree_dirty += len((git(tree, "status", "--porcelain") or "").splitlines())
 
     listed = (git(path, "ls-files", "-co", "--exclude-standard", "-z") or "").split("\0")
@@ -219,7 +232,8 @@ def scan_git(path: Path, cfg: Config, now: float) -> dict:
         "remote": remote,
         "branch": (git(path, "branch", "--show-current") or "").strip() or None,
         "branches": len((git(path, "for-each-ref", "refs/heads") or "").splitlines()),
-        "stashes": len((git(path, "stash", "list") or "").splitlines()),
+        "stashes": 0 if worktree_of else len((git(path, "stash", "list") or "").splitlines()),
+        "worktree_of": worktree_of,
         "my_commits": my_commits,
         "total_commits": total_commits,
         "months": months,
@@ -358,7 +372,7 @@ def scan_project(path: Path, cfg: Config, now: float) -> dict:
         "description": None,
         "stack": None,
         "docs": [],
-        "remote": None, "branch": None, "branches": 0, "stashes": 0,
+        "remote": None, "worktree_of": None, "branch": None, "branches": 0, "stashes": 0,
         "my_commits": 0, "total_commits": 0, "months": {}, "last_commit_ts": None, "last_commit_subject": None,
         "unpushed": 0, "worktrees": 0, "worktree_dirty": 0,
         "modified": 0, "untracked": 0, "files": [],

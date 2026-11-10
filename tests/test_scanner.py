@@ -213,3 +213,22 @@ def test_upstream_clone_with_edits_is_uncommitted_not_never_committed():
         "unpushed": 0, "modified": 2, "untracked": 0, "worktree_dirty": 0, "stashes": 0,
     }
     assert [r["kind"] for r in risks_for(project)] == ["uncommitted"]
+
+
+def test_worktree_with_its_own_row_is_not_counted_twice(cfg):
+    main = make_repo(cfg.root / "main")
+    commit(main, "a")
+    sh(main, "remote", "add", "origin", "git@github.com:me/main.git")
+    sh(main, "worktree", "add", "-b", "side", str(cfg.root / "side"))
+    commit(cfg.root / "side", "b")
+    (cfg.root / "side" / "dirty").write_text("x")
+    (main / "dirty").write_text("x")
+    projects = scan(cfg)
+    assert projects["side"]["worktree_of"] == "main"
+    assert projects["side"]["unpushed"] == 0
+    assert projects["side"]["untracked"] == 1
+    assert projects["side"]["worktree_dirty"] == 0
+    assert kinds(projects["side"]) == ["uncommitted"]
+    assert projects["main"]["unpushed"] == 2
+    assert projects["main"]["worktree_dirty"] == 0
+    assert projects["main"]["worktrees"] == 1
