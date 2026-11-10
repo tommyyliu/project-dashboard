@@ -15,7 +15,7 @@
   --critical: #d03b3b; --critical-ink: #a82a2a; --serious: #ec835a; --serious-ink: #a8481f;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --page: #0d0d0d; --surface: #1a1a19; --surface-2: #2c2c2a;
     --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9b9a92;
@@ -25,12 +25,24 @@
     --critical: #d03b3b; --critical-ink: #f08a8a; --serious: #ec835a; --serious-ink: #ec835a;
   }
 }
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #2c2c2a;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9b9a92;
+    --line: #2c2c2a; --border: rgba(255,255,255,.10);
+    --accent: #3987e5; --accent-ink: #86b6ef;
+    --heat-0: #2c2c2a; --heat-1: #184f95; --heat-2: #256abf; --heat-3: #3987e5; --heat-4: #9ec5f4;
+    --critical: #d03b3b; --critical-ink: #f08a8a; --serious: #ec835a; --serious-ink: #ec835a;
+  }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--page); color: var(--ink);
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-main { max-width: 1240px; margin: 0 auto; padding: 28px 24px 64px; }
+main {
+  max-width: 1240px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
 header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
 h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
 #scanned { color: var(--muted); font-size: 13px; }
@@ -129,6 +141,8 @@ code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .empties { margin-top: 14px; color: var(--muted); font-size: 13px; }
 .notice { padding: 30px; text-align: center; color: var(--muted); }
 .error { color: var(--critical-ink); margin-bottom: 12px; }
+.readonly-note { margin: 0 0 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.readonly-note:empty::before { content: "–"; color: var(--muted); }
 
 #tip {
   position: fixed; z-index: 10; pointer-events: none; display: none;
@@ -140,7 +154,11 @@ code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
   .col-activity { display: none; }
 }
 @media (max-width: 680px) {
-  main { padding: 18px 16px 48px; }
+  main {
+    padding-block: 18px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .table-wrap { overflow-x: auto; }
   .col-size, .col-touched .via { display: none; }
   .detail-grid { grid-template-columns: 1fr; }
   th, td { padding: 8px; }
@@ -200,6 +218,8 @@ const HEAT_BINS = [[1, 4], [5, 19], [20, 59], [60, Infinity]];
 const MONTH = new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" });
 
 const $ = id => document.getElementById(id);
+/* Set by `python3 -m dashboard --snapshot`: a read-only copy with the data embedded. */
+const SNAPSHOT = window.SNAPSHOT || null;
 const state = { scan: null, notes: {}, dashboards: {}, view: "all", open: null, scanning: false };
 
 /* Everything from disk goes through textContent, never innerHTML. */
@@ -321,8 +341,9 @@ function row(p) {
       el("div", {},
         el("button", { class: "name", textContent: p.name, "aria-expanded": String(open),
           onclick: e => { e.stopPropagation(); toggle(); } }),
-        state.dashboards[p.name] ? el("a", { class: "tag link", href: state.dashboards[p.name],
+        state.dashboards[p.name] && !SNAPSHOT ? el("a", { class: "tag link", href: state.dashboards[p.name],
           textContent: "Dashboard", onclick: e => e.stopPropagation() }) : null,
+        p.worktree_of ? el("span", { class: "tag", textContent: `worktree of ${p.worktree_of}` }) : null,
         OWNERSHIP[p.ownership] ? el("span", { class: "tag", textContent: OWNERSHIP[p.ownership] }) : null,
         n.status ? el("span", { class: "tag", textContent: n.status }) : null),
       desc ? el("div", { class: "desc", textContent: desc }) : null,
@@ -368,6 +389,14 @@ function field(p, flash, label, name, control) {
   return el("label", {}, label, control);
 }
 
+function copyButton(p, flash) {
+  const command = `cd ${JSON.stringify(p.path)} && claude`;
+  return el("button", { textContent: "Copy Claude command", onclick: async () => {
+    try { await navigator.clipboard.writeText(command); flash.textContent = "Copied"; }
+    catch { flash.textContent = command; }
+  } });
+}
+
 function detail(p) {
   const flash = el("span", { class: "flash" });
   const branchInfo = p.in_git
@@ -391,6 +420,17 @@ function detail(p) {
     el("h3", { textContent: "Disk", style: "margin-top:14px" }),
     facts(p.largest.map(c => [bytes(c.size), el("code", { textContent: c.name })])));
 
+  if (SNAPSHOT) {
+    const n = note(p);
+    const shown = [["Status", n.status], ["Theme", n.theme], ["Next step", n.next], ["Notes", n.note]];
+    const right = el("div", {},
+      el("h3", { textContent: "Your notes" }),
+      ...shown.flatMap(([label, value]) => [
+        el("div", { class: "via", textContent: label }),
+        el("p", { class: "readonly-note", textContent: value || "" })]),
+      el("div", { class: "actions" }, copyButton(p, flash), flash));
+    return el("tr", { class: "detail" }, el("td", { colSpan: 5 }, el("div", { class: "detail-grid" }, left, right)));
+  }
   const statusSelect = el("select", {}, ...STATUSES.map(s => el("option", { value: s, textContent: s || "Not set" })));
   const right = el("div", { class: "form" },
     el("h3", { textContent: "Your notes" }),
@@ -405,10 +445,7 @@ function detail(p) {
         try { await post("/api/open", { name: p.name }); flash.textContent = "Opening…"; }
         catch (e) { flash.textContent = e.message; }
       } }),
-      el("button", { textContent: "Copy Claude command", onclick: async () => {
-        await navigator.clipboard.writeText(`cd ${JSON.stringify(p.path)} && claude`);
-        flash.textContent = "Copied";
-      } }),
+      copyButton(p, flash),
       flash));
   return el("tr", { class: "detail" }, el("td", { colSpan: 5 }, el("div", { class: "detail-grid" }, left, right)));
 }
@@ -456,11 +493,11 @@ function applyStatus(data) {
   $("rescan").textContent = data.scanning ? "Scanning…" : "Rescan";
   $("error").hidden = !data.error;
   $("error").textContent = data.error || "";
-  if (state.scan) $("scanned").textContent = `Scanned ${new Date(state.scan.scanned_at * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
+  if (state.scan) $("scanned").textContent = `${SNAPSHOT ? "Read-only snapshot, scanned" : "Scanned"} ${new Date(state.scan.scanned_at * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
 }
 
 async function load() {
-  const data = await (await fetch("/api/data")).json();
+  const data = SNAPSHOT || await (await fetch("/api/data")).json();
   const fresh = data.scan && data.scan.scanned_at !== state.scan?.scanned_at;
   state.scan = data.scan;
   state.dashboards = data.dashboards || {};
@@ -474,6 +511,7 @@ async function load() {
   if (data.scanning) setTimeout(load, 700);
 }
 
+if (SNAPSHOT) $("rescan").hidden = true;
 $("rescan").addEventListener("click", async () => { await post("/api/scan", {}); load(); });
 for (const id of ["search", "theme", "scope", "sort"]) {
   $(id).addEventListener("input", () => { if (state.scan) renderRows(); });

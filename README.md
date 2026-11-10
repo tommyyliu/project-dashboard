@@ -34,6 +34,13 @@ It needs only Python, with no packages to install. Tests: `uv run pytest`.
 A project can serve its own dashboard. List its URL under `dashboards` in `config.json`
 and its row links there. `vgo` serves one from `vgo/dashboard` on port 8766.
 
+## Read-only snapshot
+
+`python3 -m dashboard --snapshot snapshot.html` runs a fresh scan and writes the page
+with that scan and your notes embedded. The committed `snapshot.html` is the copy that
+gets published, and this repo is public, so everything in it is public too. It needs no server, so it can be published or
+shared. It can't rescan, edit notes, open PyCharm, or link to project dashboards.
+
 ## Files
 
 - `config.json`: the folder to scan, plus the emails and GitHub owners that count as you.
